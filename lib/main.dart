@@ -8,6 +8,8 @@ void main() {
   runApp(const MyApp());
 }
 
+
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      initialRoute: AppRoutes.dashboardPage,
+      initialRoute: AppRoutes.splashPage,
       initialBinding: AppBinding(),
       getPages: AppPages.pages,
     );

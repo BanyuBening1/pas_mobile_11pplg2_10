@@ -4,4 +4,6 @@ class AppRoutes {
   static const String dashboardPage = "/dashboardPage";
   static const String showPage = "/showPage";
   static const String bookmarkPage = "/bookmarkPage";
+  static const String profilePage = "/profilePage";
+  static const String splashPage = "/splashPage";
 }

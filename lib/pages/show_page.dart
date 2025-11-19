@@ -1,66 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:pas_mobile_11pplg2_10/controller/tv_show_controller.dart';
 
 class ShowPage extends StatelessWidget {
-  ShowPage({super.key});
-
-  final controller = Get.find<TvShowController>();
+  const ShowPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: 10, left: 10),
-      child: Obx(() {
+    final TvShowController controller = Get.put(TvShowController());
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("TV Shows"), centerTitle: true),
+      body: Obx(() {
         if (controller.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
+
+        if (controller.showList.isEmpty) {
+          return const Center(child: Text('Tidak ada data'));
+        }
+
         return RefreshIndicator(
+          onRefresh: controller.refreshData,
           child: ListView.builder(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             itemCount: controller.showList.length,
-            itemBuilder: (context, index) {
-              final show = controller.showList[index];
+            itemBuilder: (context, i) {
+              final show = controller.showList[i];
+
               return Card(
-                child: Row(
-                  children: [
-                    Image.network(show.image.original, width: 120, height: 180),
-                    Column(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(10),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      show.image.original,
+                      width: 70,
+                      height: 90,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 50),
+                    ),
+                  ),
+                  title: Text(
+                    show.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "  " + show.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(" " + show.genres.toString()),
-                        const SizedBox(height: 4),
-                        Text("  " + show.rating.toString()),
-                        const SizedBox(height: 4),
-                        Text("  Language: " + show.language.toString()),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              controller.markFavoriteShow(index);
-                            },
-                            icon: Icon(Icons.bookmark, color: Colors.white10),
-                            label: Text("Bookmark"),
-                          ),
-                        ),
+                        Text("Language: ${show.language.name}"),
+                        Text("Type: ${show.type.name}"),
+                        Text("Rating: ${show.rating.average}"),
                       ],
                     ),
-                  ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.bookmark_add, color: Colors.blue),
+                    onPressed: () => controller.addMarkShow(show),
+                  ),
                 ),
               );
             },
           ),
-          onRefresh: () async {
-            controller.fetchTvShow();
-          },
         );
       }),
     );

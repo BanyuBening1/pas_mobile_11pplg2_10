@@ -1,56 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:pas_mobile_11pplg2_10/controller/tv_show_controller.dart';
 
 class BookmarkPage extends StatelessWidget {
-  BookmarkPage({super.key});
-
-  final controller = Get.find<TvShowController>();
+  const BookmarkPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: 10, left: 10),
-      child: Obx(() {
-        if (controller.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
+    final TvShowController controller = Get.find<TvShowController>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Bookmark'), centerTitle: true),
+      body: Obx(() {
+        if (controller.showMark.isEmpty) {
+          return const Center(child: Text('Belum ada bookmark'));
         }
-        return RefreshIndicator(
-          child: ListView.builder(
-            padding: EdgeInsets.all(8),
-            itemCount: controller.showList.length,
-            itemBuilder: (context, index) {
-              final show = controller.markFavoriteShow[index];
-              return Card(
-                child: Row(
-                  children: [
-                    Image.network(show.image.original, width: 120, height: 180),
-                    Column(
-                      children: [
-                        Text(
-                          "  " + show.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(" " + show.genres),
-                        const SizedBox(height: 4),
-                        Text("  " + show.rating),
-                        const SizedBox(height: 4),
-                        Text("  Language: " + show.language),
-                        const SizedBox(height: 4),
-                      ],
-                    ),
-                  ],
+
+        return ListView.builder(
+          itemCount: controller.showMark.length,
+          itemBuilder: (context, i) {
+            final show = controller.showMark[i];
+
+            return Card(
+              margin: const EdgeInsets.all(8),
+              child: ListTile(
+                leading: Image.network(
+                  show.image.original,
+                  width: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.image_not_supported);
+                  },
                 ),
-              );
-            },
-          ),
-          onRefresh: () async {
-            controller.fetchTvShow();
+                title: Text(show.name),
+                subtitle: Text(show.language.name),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => controller.deleteMarkShow(show.id),
+                ),
+              ),
+            );
           },
         );
       }),
