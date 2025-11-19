@@ -1,53 +1,63 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:async';
+import 'package:pas_mobile_11pplg2_10/model/tv_show_model.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DBHelper {
-  static final DBHelper _instance = DBHelper._internal();
-  factory DBHelper() => _instance;
-  DBHelper._internal();
+  static final DBHelper instance = DBHelper._init();
+  static Database? _database;
 
-  static Database? _db;
+  DBHelper._init();
 
-  Future<Database> get db async {
-    if (_db != null) return _db!;
-    _db = await _initDb();
-    return _db!;
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDb("tvshow.db");
+    return _database!;
   }
 
-  Future<Database> _initDb() async {
+  Future<Database> _initDb(String filePath) async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'shows.db');
+    final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE product(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            image TEXT,
-            name TEXT,
-            genres TEXT,
-            language TEXT,
-            rating INT
-          )
-          ''');
-      },
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDb);
   }
 
-  Future<int> markShow(Map<String, dynamic> show) async {
-    final client = await db;
-    return await client.insert('show', show);
+  Future _createDb(Database db, int version) async {
+    await db.execute("""
+      CREATE TABLE tvshow(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT,
+        name TEXT,
+        type TEXT,
+        language TEXT,
+        rating TEXT,
+        image TEXT
+      )
+    """);
   }
+
+  // INSERT
+  Future<int> insertShow(Tvshowmodel model) async {
+    final db = await instance.database;
+    return await db.insert("tvshow", model.toMap());
+  }
+
+
+  Future<List<Map<String, dynamic>>> getAllShow() async {
+    final db = await instance.database;
+    return await db.query("tvshow");
+  }
+
+  Future<bool> isShowExists(int id) async {
+    final db = await instance.database;
+    final res = await db.query("tvshow", where: "id = ?", whereArgs: [id]);
+    return res.isNotEmpty;
+  }
+
 
   Future<int> deleteShow(int id) async {
-    final client = await db;
-    return await client.delete('show', where: 'id = ?', whereArgs: [id]);
+    final db = await instance.database;
+    return await db.delete("tvshow", where: "id = ?", whereArgs: [id]);
   }
 
-  Future<List<Map<String, dynamic>>> getMarkShow() async {
-    final client = await db;
-    return await client.query('show');
-  }
 }

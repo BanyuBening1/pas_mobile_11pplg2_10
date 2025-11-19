@@ -1,96 +1,92 @@
 import 'dart:convert';
-
 import 'package:get/get.dart';
-import 'package:pas_mobile_11pplg2_10/dbHelper.dart';
-import 'package:pas_mobile_11pplg2_10/model/tv_show_model.dart';
-import 'package:pas_mobile_11pplg2_10/pages/show_page.dart';
-import 'package:pas_mobile_11pplg2_10/services/baseUrl.dart';
 import 'package:http/http.dart' as http;
+import 'package:pas_mobile_11pplg2_10/model/tv_show_model.dart';
+import 'package:pas_mobile_11pplg2_10/services/baseUrl.dart';
+import 'package:pas_mobile_11pplg2_10/dbHelper.dart';
 
 class TvShowController extends GetxController {
   var isLoading = true.obs;
-  var showList = <TvShowModel>[].obs;
+  var showList = <Tvshowmodel>[].obs;
+  var showMark = <Tvshowmodel>[].obs;
+
+  final db = DBHelper.instance;
+
 
   @override
   void onInit() {
     super.onInit();
     fetchTvShow();
+    fetchMarkShow();
   }
 
   Future<void> fetchTvShow() async {
     final url = Uri.parse('${Baseurl.tvShows}/shows');
-
     try {
       isLoading.value = true;
-
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List tvShowData = data;
-        showList.assignAll(
-          tvShowData.map((e) => TvShowModel.fromJson(e)).toList(),
-        );
+        final List<dynamic> data = jsonDecode(response.body);
+        showList.assignAll(data.map((e) => Tvshowmodel.fromJson(e)).toList());
       } else {
-        Get.snackbar(
-          'Error',
-          'Gagal mengambil data produk: ${response.statusCode}',
-        );
+        Get.snackbar('Error', 'Gagal mengambil data: ${response.statusCode}');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil data produk: $e');
+      Get.snackbar('Error', 'Gagal mengambil data: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> refreshData() async {
-    await fetchTvShow();
+  Future<void> refreshData() async => fetchTvShow();
+
+  Future<void> fetchMarkShow() async {
+    final mapList = await db.getAllShow();
+    final list = mapList.map((row) => Tvshowmodel.fromDb(row)).toList();
+    showMark.assignAll(list);
   }
 
-  final db = DBHelper();
-  void markFavoriteShow(int i) async {
-    final findShow = showList[i];
-    print("Data Product : ${findShow}");
+  Future<void> addMarkShow(Tvshowmodel show) async {
+    final exists = await DBHelper.instance.isShowExists(show.id);
 
-    await db.markShow({
-      'image': findShow.image,
-      'name': findShow.name.toString(),
-      'genres': findShow.genres,
-      'language': findShow.language.toString(),
-      'rating': findShow.rating.toString(),
-    });
+    if (exists) {
+      Get.snackbar(
+        "Bookmark",
+        "Show sudah ada di bookmark",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 2),
+      );
+      return;
+    }
+
+    await DBHelper.instance.insertShow(show);
 
     Get.snackbar(
-      'Product Pages',
-      'Product Berhasil Di Bookmark',
-      duration: Duration(seconds: 1),
-    );
-    fetchTvShow();
-  }
-  var productMark = <TvShowModel>[].obs;
-
-  void fetchMarkProduct() async {
-    final mapList = await db.getMarkShow();
-
-    final list = mapList.map((row) => TvShowModel.fromJson(row)).toList();
-
-    productMark.assignAll(list);
-
-    print("Data Marked: $productMark");
-  }
-
-  void deleteMarkProduct(int i) async {
-    final product = productMark[i];
-
-    await db.deleteShow(product.id);
-
-    Get.snackbar(
-      'Product Pages',
-      'Product Berhasil Di Hapus',
+      "Bookmark",
+      "Berhasil ditambahkan ke bookmark",
       snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 1),
+      duration: Duration(seconds: 2),
     );
+  }
 
-    fetchMarkProduct();
+  Future<void> deleteMarkShow(int id) async {
+    await db.deleteShow(id);
+    fetchMarkShow();
+    Get.snackbar(
+      "Bookmark",
+      "Berhasil dihapus dari bookmark",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 2),
+    );
+  }
+
+  Future<void> toggleMark(Tvshowmodel show) async {
+    final exist = showMark.any((e) => e.id == show.id);
+    if (exist) {
+      await deleteMarkShow(show.id);
+    } else {
+      await addMarkShow(show);
+    }
   }
 }

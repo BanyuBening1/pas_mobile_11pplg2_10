@@ -1,96 +1,66 @@
 // To parse this JSON data, do
 //
-//     final tvShowModel = tvShowModelFromJson(jsonString);
+//     final tvshowmodel = tvshowmodelFromJson(jsonString);
 
 import 'dart:convert';
 
-List<TvShowModel> tvShowModelFromJson(String str) => List<TvShowModel>.from(
-  json.decode(str).map((x) => TvShowModel.fromJson(x)),
+List<Tvshowmodel> tvshowmodelFromJson(String str) => List<Tvshowmodel>.from(
+  json.decode(str).map((x) => Tvshowmodel.fromJson(x)),
 );
 
-String tvShowModelToJson(List<TvShowModel> data) =>
+String tvshowmodelToJson(List<Tvshowmodel> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class TvShowModel {
+class Tvshowmodel {
   int id;
   String url;
   String name;
   Type type;
   Language language;
-  List<Genre> genres;
-  Status status;
-  int? runtime;
-  int averageRuntime;
-  DateTime premiered;
-  DateTime? ended;
-  String? officialSite;
-  Schedule schedule;
   Rating rating;
-  int weight;
-  Network? network;
-  Network? webChannel;
-  Country? dvdCountry;
-  Externals externals;
   Image image;
-  String summary;
-  int updated;
-  Links links;
 
-  TvShowModel({
+  Tvshowmodel({
     required this.id,
     required this.url,
     required this.name,
     required this.type,
     required this.language,
-    required this.genres,
-    required this.status,
-    required this.runtime,
-    required this.averageRuntime,
-    required this.premiered,
-    required this.ended,
-    required this.officialSite,
-    required this.schedule,
     required this.rating,
-    required this.weight,
-    required this.network,
-    required this.webChannel,
-    required this.dvdCountry,
-    required this.externals,
     required this.image,
-    required this.summary,
-    required this.updated,
-    required this.links,
   });
 
-  factory TvShowModel.fromJson(Map<String, dynamic> json) => TvShowModel(
+  factory Tvshowmodel.fromJson(Map<String, dynamic> json) => Tvshowmodel(
     id: json["id"],
     url: json["url"],
     name: json["name"],
     type: typeValues.map[json["type"]]!,
     language: languageValues.map[json["language"]]!,
-    genres: List<Genre>.from(json["genres"].map((x) => genreValues.map[x]!)),
-    status: statusValues.map[json["status"]]!,
-    runtime: json["runtime"],
-    averageRuntime: json["averageRuntime"],
-    premiered: DateTime.parse(json["premiered"]),
-    ended: json["ended"] == null ? null : DateTime.parse(json["ended"]),
-    officialSite: json["officialSite"],
-    schedule: Schedule.fromJson(json["schedule"]),
     rating: Rating.fromJson(json["rating"]),
-    weight: json["weight"],
-    network: json["network"] == null ? null : Network.fromJson(json["network"]),
-    webChannel: json["webChannel"] == null
-        ? null
-        : Network.fromJson(json["webChannel"]),
-    dvdCountry: json["dvdCountry"] == null
-        ? null
-        : Country.fromJson(json["dvdCountry"]),
-    externals: Externals.fromJson(json["externals"]),
     image: Image.fromJson(json["image"]),
-    summary: json["summary"],
-    updated: json["updated"],
-    links: Links.fromJson(json["_links"]),
   );
+
+  factory Tvshowmodel.fromDb(Map<String, dynamic> json) {
+    return Tvshowmodel(
+      id: json["id"] ?? 0,
+      url: json["url"] ?? "",
+      name: json["name"] ?? json["title"] ?? "",
+      type: typeValues.map[json["type"]] ?? Type.SCRIPTED,
+      language: languageValues.map[json["language"]] ?? Language.ENGLISH,
+
+      rating: json["rating"] != null
+          ? (json["rating"] is String
+                ? Rating(average: double.tryParse(json["rating"]) ?? 0)
+                : Rating.fromJson(json["rating"]))
+          : Rating(average: 0),
+
+      image: json["image"] != null
+          ? (json["image"] is String
+                ? Image(medium: json["image"], original: json["image"])
+                : Image.fromJson(json["image"]))
+          : Image(medium: "", original: ""),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
@@ -98,28 +68,24 @@ class TvShowModel {
     "name": name,
     "type": typeValues.reverse[type],
     "language": languageValues.reverse[language],
-    "genres": List<dynamic>.from(genres.map((x) => genreValues.reverse[x])),
-    "status": statusValues.reverse[status],
-    "runtime": runtime,
-    "averageRuntime": averageRuntime,
-    "premiered":
-        "${premiered.year.toString().padLeft(4, '0')}-${premiered.month.toString().padLeft(2, '0')}-${premiered.day.toString().padLeft(2, '0')}",
-    "ended":
-        "${ended!.year.toString().padLeft(4, '0')}-${ended!.month.toString().padLeft(2, '0')}-${ended!.day.toString().padLeft(2, '0')}",
-    "officialSite": officialSite,
-    "schedule": schedule.toJson(),
     "rating": rating.toJson(),
-    "weight": weight,
-    "network": network?.toJson(),
-    "webChannel": webChannel?.toJson(),
-    "dvdCountry": dvdCountry?.toJson(),
-    "externals": externals.toJson(),
     "image": image.toJson(),
-    "summary": summary,
-    "updated": updated,
-    "_links": links.toJson(),
   };
+
+  Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "url": url,
+      "name": name,
+      "type": typeValues.reverse[type], // enum → string
+      "language": languageValues.reverse[language],
+      "rating": rating.average.toString(), // angka → string
+      "image": image.medium ?? image.original, // simpan URL saja
+    };
+  }
 }
+
+
 
 class Country {
   Name name;

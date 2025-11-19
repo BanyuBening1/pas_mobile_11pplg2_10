@@ -5,8 +5,10 @@ import 'package:pas_mobile_11pplg2_10/binding/bottom_nav_binding.dart';
 import 'package:pas_mobile_11pplg2_10/pages/bookmark_page.dart';
 import 'package:pas_mobile_11pplg2_10/pages/dashboard_page.dart';
 import 'package:pas_mobile_11pplg2_10/pages/login_page.dart';
+import 'package:pas_mobile_11pplg2_10/pages/profile_page.dart';
 import 'package:pas_mobile_11pplg2_10/pages/register_page.dart';
 import 'package:pas_mobile_11pplg2_10/pages/show_page.dart';
+import 'package:pas_mobile_11pplg2_10/pages/splash_screen_pages.dart';
 import 'package:pas_mobile_11pplg2_10/routes/routes.dart';
 
 class AppPages {
@@ -16,5 +18,7 @@ class AppPages {
     GetPage(name: AppRoutes.dashboardPage, page: () => DashboardPage(), binding: BottomNavBinding()),
     GetPage(name: AppRoutes.showPage, page: () => ShowPage(), binding: AppBinding()),
     GetPage(name: AppRoutes.bookmarkPage, page: () => BookmarkPage(), binding: AppBinding()),
+    GetPage(name: AppRoutes.profilePage, page: () => ProfilePage(), binding: AuthBinding()),
+    GetPage(name: AppRoutes.splashPage, page: () => SplashScreenPages()),
   ];
 }
